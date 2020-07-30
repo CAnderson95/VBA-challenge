@@ -1,70 +1,117 @@
-Attribute VB_Name = "Module1"
-Sub yearly_change()
-  ' Set an initial variable for holding the Ticker Name
-  Dim Ticker As String
+Sub Button4_Click()
 
-  ' Set an initial variable for holding the Year Change per ticker
-  Dim YRCHNG As Double
-  YRCHNG = 0
-  
-    ' Set an initial variable for holding the total volume per ticker
-  Dim VolTotal As Double
-  VolTotal = 0
-  
-  ' Set an initial variable for holding the % Change per ticker
-  Dim PCTCHNG As Double
-  PCTCHNG = 0
-  
-  Dim vMax
+    ' Loop / Iterate Through All Worksheets
+    For Each ws In ThisWorkbook.Sheets
 
-  ' Keep track of the location for each Ticker in the summary table
-  Dim Summary_Table_Row As Integer
-  Summary_Table_Row = 2
-  
-  ' Loop through all Tickers
-  For i = 2 To 705714
+        ' Column Headers / Data Field Labels
+        ws.Range("I1").Value = "Ticker"
+        ws.Range("J1").Value = "Yearly Change"
+        ws.Range("K1").Value = "Percent Change"
+        ws.Range("L1").Value = "Total Stock Volume"
+        ws.Range("O2").Value = "Greatest % Increase"
+        ws.Range("O3").Value = "Greatest % Decrease"
+        ws.Range("O4").Value = "Greatest Total Volume"
+        ws.Range("P1").Value = "Ticker"
+        ws.Range("Q1").Value = "Value"
 
-    ' Check if we are still within the same Ticker, if it is not...
-    If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+       ' Declare Initial Variables And Set Default/Baseline Variables
+        Dim TickerName As String
+        Dim LastRow As Long
+        Dim TotalTickerVolume As Double
+        TotalTickerVolume = 0
+        Dim SummaryTableRow As Long
+        SummaryTableRow = 2
+        Dim YearlyOpen As Double
+        Dim YearlyClose As Double
+        Dim YearlyChange As Double
+        Dim PreviousAmount As Long
+        PreviousAmount = 2
+        Dim PercentChange As Double
+        Dim GreatestIncrease As Double
+        GreatestIncrease = 0
+        Dim GreatestDecrease As Double
+        GreatestDecrease = 0
+        Dim LastRowValue As Long
+        Dim GreatestTotalVolume As Double
+        GreatestTotalVolume = 0
 
-      ' Set the Ticker name
-      Ticker = Cells(i, 1).Value
-      
-       ' Add to the Volume Total
-      VolTotal = VolTotal + Cells(i, 7).Value
+        ' Determine the Last Row
+        LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        For i = 2 To LastRow
 
-      ' Subtract final close price from first open price
-      YRCHNG = Cells(i, 3).Value - Cells(i + 261, 6).Value
-      
-      ' Divide final close price from first open price
-      PCTCHNG = (Cells(i, 3).Value / Cells(i + 261, 6).Value)
-      
-      ' Print the Ticker name in the Summary Table
-      Range("I" & Summary_Table_Row).Value = Ticker
+            ' Add To Ticker Total Volume
+            TotalTickerVolume = TotalTickerVolume + ws.Cells(i, 7).Value
+            ' Check If We Are Still Within The Same Ticker Name If It Is Not...
+            If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
 
-      ' Print the Year Change to the Summary Table
-      Range("J" & Summary_Table_Row).Value = YRCHNG
-      
-        ' Print the Volume Total to the Summary Table
-      Range("L" & Summary_Table_Row).Value = VolTotal
-      
-      ' Print the Year Change to the Summary Table
-      Range("K" & Summary_Table_Row).Value = PCTCHNG
-      
-      ' Add one to the summary table row
-      Summary_Table_Row = Summary_Table_Row + 1
-      
-      ' Reset the Yearly Change Total
-      YRCHNG = 0
-      
-         ' Reset the Brand Total
-      VolTotal = 0
-      
-       ' Reset the Yearly Change Total
-      PCTCHNG = 0
+                ' Set Ticker Name
+                TickerName = ws.Cells(i, 1).Value
+                ' Print The Ticker Name In The Summary Table
+                ws.Range("I" & SummaryTableRow).Value = TickerName
+                ' Print The Ticker Total Amount To The Summary Table
+                ws.Range("L" & SummaryTableRow).Value = TotalTickerVolume
+                ' Reset Ticker Total
+                TotalTickerVolume = 0
 
-    ' If the cell immediately following a row is the same Ticker...
-    Else
-    End If
-    Next
-    End Sub
+                ' Set Yearly Open, Yearly Close and Yearly Change Name
+                YearlyOpen = ws.Range("C" & PreviousAmount)
+                YearlyClose = ws.Range("F" & i)
+                YearlyChange = YearlyClose - YearlyOpen
+                ws.Range("J" & SummaryTableRow).Value = YearlyChange
+
+                ' Determine Percent Change
+                If YearlyOpen = 0 Then
+                    PercentChange = 0
+                Else
+                    YearlyOpen = ws.Range("C" & PreviousAmount)
+                    PercentChange = YearlyChange / YearlyOpen
+                End If
+                ' Format Double To Include % Symbol And Two Decimal Places
+                ws.Range("K" & SummaryTableRow).NumberFormat = "0.00%"
+                ws.Range("K" & SummaryTableRow).Value = PercentChange
+
+                ' Conditional Formatting Highlight Positive (Green) / Negative (Red)
+                If ws.Range("J" & SummaryTableRow).Value >= 0 Then
+                    ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 4
+                Else
+                    ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 3
+                End If
+            
+                ' Add One To The Summary Table Row
+                SummaryTableRow = SummaryTableRow + 1
+                PreviousAmount = i + 1
+                End If
+            Next i
+
+            ' Greatest % Increase, Greatest % Decrease and Greatest Total Volume
+            LastRow = ws.Cells(Rows.Count, 11).End(xlUp).Row
+        
+            ' Start Loop For Final Results
+            For i = 2 To LastRow
+                If ws.Range("K" & i).Value > ws.Range("Q2").Value Then
+                    ws.Range("Q2").Value = ws.Range("K" & i).Value
+                    ws.Range("P2").Value = ws.Range("I" & i).Value
+                End If
+
+                If ws.Range("K" & i).Value < ws.Range("Q3").Value Then
+                    ws.Range("Q3").Value = ws.Range("K" & i).Value
+                    ws.Range("P3").Value = ws.Range("I" & i).Value
+                End If
+
+                If ws.Range("L" & i).Value > ws.Range("Q4").Value Then
+                    ws.Range("Q4").Value = ws.Range("L" & i).Value
+                    ws.Range("P4").Value = ws.Range("I" & i).Value
+                End If
+
+            Next i
+        ' Format Double To Include % Symbol And Two Decimal Places
+            ws.Range("Q2").NumberFormat = "0.00%"
+            ws.Range("Q3").NumberFormat = "0.00%"
+            
+        ' Format Table Columns To Auto Fit
+        ws.Columns("I:Q").AutoFit
+
+    Next ws
+End Sub
+
